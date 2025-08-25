@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>リダイレクトしています</title>
+</head>
+<body>
+    <div style="display: none;" id="token">{{index . "token"}}</div>
+    <div style="display: none;" id="isPopup">{{index . "isPopup"}}</div>
+    <script>
+        // トークンを取得
+        const token = document.getElementById('token').textContent;
+
+        // トークンをローカルストレージに保存
+        localStorage.setItem('token', token);
+
+        // isPopup を取得
+        const isPopup = document.getElementById('isPopup').textContent;
+
+        setTimeout(function() {
+            if (isPopup === "1") {
+                // 親ウィンドウにメッセージを送信
+                const parent = window.opener
+                parent.postMessage("Login-Success", "*")
+
+                // ポップアップウィンドウを閉じる
+                window.close();
+                return
+            }
+
+            window.location.href = "/statics/"; // メイン画面へのURLを指定
+        }, 0); // 0秒後にリダイレクト
+    </script>
+</body>
+</html>

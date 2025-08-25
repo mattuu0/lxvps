@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>エラー発生</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: #f8f8f8;
+            color: #333;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .error-container {
+            background-color: #fff;
+            padding: 40px;
+            border-radius: 6px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+            text-align: center;
+            max-width: 700px;
+            width: 100%;
+            border-top: 4px solid #333;
+            animation: subtle-fade-in 0.5s ease-out;
+        }
+
+        /* アイコン関連のスタイルを削除 */
+        /* .error-container .icon { ... } */
+
+
+        .error-container h1 {
+            color: #333;
+            margin-bottom: 20px;
+            /* アイコンがなくなった分余白を調整 */
+            font-size: 1.8em;
+            font-weight: 500;
+        }
+
+        .error-container>p {
+            margin-bottom: 25px;
+            line-height: 1.6;
+            color: #555;
+            font-weight: 300;
+            font-size: 1em;
+        }
+
+        .error-details {
+            background-color: #eee;
+            padding: 15px 20px;
+            border-radius: 4px;
+            margin-bottom: 30px;
+            text-align: left;
+            font-size: 0.9em;
+            color: #444;
+            line-height: 1.6;
+            word-break: break-word;
+            position: relative;
+            /* コピー通知メッセージ用 */
+        }
+
+        .error-details p {
+            margin: 0 0 10px 0;
+        }
+
+        .error-details p:last-child {
+            margin-bottom: 0;
+        }
+
+        .error-details strong {
+            display: inline-block;
+            min-width: 120px;
+            margin-right: 10px;
+            color: #333;
+            font-weight: 500;
+            vertical-align: top;
+        }
+
+        /* コピー可能な span のスタイル */
+        .copyable-text {
+            display: inline-block;
+            vertical-align: top;
+            width: calc(100% - 130px);
+            cursor: pointer;
+            /* コピー可能であることを示す */
+            text-decoration: underline dotted #888;
+            /* コピー可能であることを視覚的に示す */
+            transition: text-decoration-color 0.2s ease;
+            position: relative;
+            /* コピー通知メッセージ用 */
+        }
+
+        .copyable-text:hover {
+            text-decoration-color: #333;
+        }
+
+
+        /* エラーメッセージ表示部分のスタイル */
+        .error-message-text {
+            max-height: 6em;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+            white-space: pre-wrap;
+            text-decoration: none !important;
+            /* メッセージ部分は下線不要 */
+            cursor: default !important;
+            /* メッセージ部分はカーソルを変更しない */
+            width: 100% !important;
+            /* 幅を調整 */
+            display: block !important;
+            /* ブロック要素にする */
+        }
+
+        .error-message-text.expanded {
+            max-height: none;
+        }
+
+        .toggle-message {
+            display: inline-block;
+            margin-top: 10px;
+            color: #007bff;
+            text-decoration: underline;
+            cursor: pointer;
+            font-size: 0.9em;
+        }
+
+        .back-link {
+            display: inline-block;
+            background-color: #333;
+            color: #fff;
+            padding: 12px 25px;
+            text-decoration: none;
+            border: 1px solid #333;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+        }
+
+        .back-link:hover {
+            background-color: #fff;
+            color: #333;
+            border-color: #333;
+        }
+
+        @keyframes subtle-fade-in {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* コピー通知メッセージのスタイル */
+        .copy-notification {
+            position: absolute;
+            bottom: 100%;
+            /* コピー対象要素の上に表示 */
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: rgba(0, 0, 0, 0.7);
+            color: #fff;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 0.8em;
+            white-space: nowrap;
+            /* テキストを折り返さない */
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            pointer-events: none;
+            /* マウスイベントを無視 */
+            z-index: 10;
+            /* 他の要素より手前に */
+            margin-bottom: 5px;
+            /* 要素との間に少し余白 */
+        }
+
+        .copy-notification.show {
+            opacity: 1;
+        }
+
+
+        /* --- レスポンシブ対応 --- */
+
+        @media (max-width: 768px) {
+            .error-container {
+                padding: 30px;
+                max-width: 600px;
+            }
+
+            .error-container h1 {
+                font-size: 1.6em;
+            }
+
+            .error-container>p {
+                font-size: 0.95em;
+                margin-bottom: 20px;
+            }
+
+            .error-details {
+                padding: 15px;
+                font-size: 0.85em;
+            }
+
+            .error-details strong {
+                min-width: 100px;
+            }
+
+            .copyable-text {
+                width: calc(100% - 110px);
+            }
+
+            .error-message-text {
+                max-height: 7.5em;
+            }
+
+
+            .back-link {
+                padding: 10px 20px;
+                font-size: 0.95em;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .error-container {
+                padding: 20px;
+            }
+
+            .error-container h1 {
+                font-size: 1.4em;
+            }
+
+            .error-container>p {
+                font-size: 0.9em;
+                margin-bottom: 15px;
+            }
+
+            .error-details {
+                padding: 10px;
+                font-size: 0.8em;
+            }
+
+            .error-details p {
+                margin-bottom: 8px;
+            }
+
+            .error-details strong {
+                display: block;
+                min-width: auto;
+                margin-right: 0;
+                margin-bottom: 5px;
+            }
+
+            .copyable-text {
+                display: block;
+                width: 100%;
+                text-decoration: underline;
+                /* 細かい点線ではなく実線に */
+            }
+
+            .error-message-text {
+                max-height: 9em;
+                text-decoration: none !important;
+                /* ここも下線不要 */
+                cursor: default !important;
+            }
+
+
+            .toggle-message {
+                font-size: 0.85em;
+            }
+
+
+            .back-link {
+                padding: 10px 15px;
+                font-size: 0.9em;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="error-container">
+        <h1>システムエラーが発生しました</h1>
+        <p>問題が発生しました。ご迷惑をおかけいたします。</p>
+
+        <div class="error-details">
+            <p><strong>エラーID:</strong> <span id="error-id" class="copyable-text">{{.ErrorID}}</span></p>
+            <p><strong>HTTPステータス:</strong> <span id="http-status" class="copyable-text">{{.StatusCode}}</span></p>
+            <p><strong>エラーメッセージ:</strong>
+                <span id="error-message-text" class="error-message-text">{{.Error}}</span>
+                <span id="toggle-message" class="toggle-message" style="display: none;">もっと見る</span>
+            </p>
+        </div>
+
+        <div id="IsPopup" style="display: none;">{{.isPopup}}</div>
+        <a href="/statics/" id="BackButton" class="back-link"></a>
+    </div>
+
+    <script>
+        const messageText = document.getElementById('error-message-text');
+        const toggleButton = document.getElementById('toggle-message');
+        const errorIdSpan = document.getElementById('error-id');
+        const httpStatusSpan = document.getElementById('http-status');
+
+        const BackButton = document.getElementById("BackButton");
+        const IsPopup = document.getElementById("IsPopup");
+
+        let initialHeightEm = 6; // 初期高さをemで指定 (CSSと合わせる)
+
+        // ボタンを押したときの処理
+        BackButton.addEventListener("click", function (evt) {
+            // 既存の処理を無効か
+            evt.preventDefault();
+
+            // ポップアップの判定
+            if (IsPopup.textContent == "1") {
+                // ポップアップを閉じる
+                window.close();
+                return;
+            }
+
+            // それ以外なら遷移
+            window.location.href = "/statics/";
+        });
+
+        // もしポップアップなら閉じるに変更
+        // ポップアップの判定
+        if (IsPopup.textContent == "1") {
+            BackButton.textContent = "閉じる";
+        } else {
+            BackButton.textContent = "メイン画面に戻る";
+        }
+
+        // エラーメッセージ表示/非表示の制御関数
+        const updateToggleVisibility = () => {
+            messageText.style.maxHeight = initialHeightEm + 'em'; // 初期高さを一旦適用
+            if (messageText.scrollHeight > messageText.clientHeight + 5) { // 誤差を考慮
+                toggleButton.style.display = 'inline-block';
+                toggleButton.textContent = 'もっと見る';
+                messageText.classList.remove('expanded');
+            } else {
+                toggleButton.style.display = 'none';
+                messageText.classList.remove('expanded');
+                messageText.style.maxHeight = 'none';
+            }
+        };
+
+        toggleButton.addEventListener('click', function () {
+            if (messageText.classList.contains('expanded')) {
+                messageText.style.maxHeight = initialHeightEm + 'em';
+                messageText.classList.remove('expanded');
+                toggleButton.textContent = 'もっと見る';
+            } else {
+                messageText.style.maxHeight = 'none';
+                const fullHeight = messageText.scrollHeight;
+                messageText.style.maxHeight = initialHeightEm + 'em';
+                setTimeout(() => {
+                    messageText.style.maxHeight = fullHeight + 'px';
+                    messageText.classList.add('expanded');
+                    toggleButton.textContent = '隠す';
+                }, 10);
+            }
+        });
+
+        // コピー機能の実装
+        const copyToClipboard = (text, targetElement) => {
+            if (!navigator.clipboard) {
+                // Clipboard API が利用できない場合
+                console.warn("Clipboard API not available.");
+                // 古い execCommand を使うなどの代替手段も考慮できますが、ここでは省略
+                return;
+            }
+            navigator.clipboard.writeText(text).then(() => {
+                // コピー成功時の通知表示
+                showCopyNotification(targetElement);
+            }).catch(err => {
+                console.error('Failed to copy: ', err);
+                // コピー失敗時の処理
+            });
+        };
+
+        // コピー成功通知メッセージ表示関数
+        const showCopyNotification = (targetElement) => {
+            const notification = document.createElement('div');
+            notification.classList.add('copy-notification');
+            notification.textContent = 'Copied!';
+            targetElement.parentNode.style.position = 'relative'; // 親要素に position: relative; を設定 (もし設定されていなければ)
+
+            // 対象要素の位置を基準に通知メッセージを配置
+            const rect = targetElement.getBoundingClientRect();
+            const parentRect = targetElement.parentNode.getBoundingClientRect();
+
+            // targetElementの親要素（pタグ）に追加
+            targetElement.parentNode.appendChild(notification);
+
+            // 正しい位置を計算して設定
+            // 通知メッセージを対象要素の上に中央寄せで表示
+            // CSSの bottom: 100%; left: 50%; transform: translateX(-50%); で既に位置の基本は設定済み
+
+            // 表示してフェードイン
+            setTimeout(() => {
+                notification.classList.add('show');
+            }, 10); // わずかな遅延でCSSトランジションを発火
+
+            // 短時間表示後にフェードアウトして削除
+            setTimeout(() => {
+                notification.classList.remove('show');
+                // トランジション終了後に要素を削除
+                notification.addEventListener('transitionend', () => {
+                    notification.remove();
+                }, { once: true });
+            }, 1500); // 1.5秒表示
+        };
+
+
+        // エラーIDとHTTPステータスのspan要素にクリックイベントリスナーを追加
+        if (errorIdSpan) {
+            errorIdSpan.addEventListener('click', () => {
+                const textToCopy = errorIdSpan.textContent.trim();
+                copyToClipboard(textToCopy, errorIdSpan);
+            });
+        }
+
+        if (httpStatusSpan) {
+            httpStatusSpan.addEventListener('click', () => {
+                const textToCopy = httpStatusSpan.textContent.trim();
+                copyToClipboard(textToCopy, httpStatusSpan);
+            });
+        }
+
+
+        // ページの読み込み完了時とウィンドウサイズ変更時に表示/非表示を更新
+        window.addEventListener('load', updateToggleVisibility);
+        window.addEventListener('resize', updateToggleVisibility);
+
+        // 初期表示時にも一度実行
+        updateToggleVisibility();
+
+
+    </script>
+
+</body>
+
+</html>

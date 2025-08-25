@@ -1,0 +1,46 @@
+syntax = "proto3";
+package grpckit;
+
+option go_package = "../grpckit";
+
+// ユーザーオブジェクト
+message User {
+    string UserID = 1;      //ユーザーID 
+    string Name = 2;        //ユーザー名
+    string Email = 3;       //メールアドレス
+    repeated Label Labels = 4;    //ラベル
+}
+
+// ラベルを取得する
+message Label {
+    string Name = 1;    //ラベル名
+    string Color = 2;   //ラベル色
+}
+
+// ユーザー検索リクエスト
+message SearchRequest {
+    string Name = 1;    //ユーザー名
+    string Email = 2;   //メールアドレス
+    repeated Label Labels = 3;  //ラベルリスト
+}
+
+// 検索結果
+message SearchResult {
+    repeated User users = 1;  //検索結果
+}
+
+// ユーザーを取得する
+message GetUserRequest {
+    string UserID = 1;
+}
+
+// ラベルを取得する
+message GetLabelRequest {
+    string LabelName = 1;
+}
+
+service AuthBaseService {
+    rpc SearchUser(SearchRequest) returns (SearchResult) {}
+    rpc GetUser(GetUserRequest) returns (User) {}
+    rpc GetLabel(GetLabelRequest) returns (Label) {}
+}

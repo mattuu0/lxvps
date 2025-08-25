@@ -1,0 +1,39 @@
+###
+# ログイン
+# @name login
+POST https://localhost:8377/auth/basic/login HTTP/1.1
+Content-Type: application/json
+
+{
+    "email": "nV5oY@example.com",
+    "password": "password"
+}
+
+###
+# サインアップ
+POST https://localhost:8377/auth/basic/signup HTTP/1.1
+Content-Type: application/json
+
+{
+    "email": "nV5oY@example.com",
+    "password": "password",
+    "name": "name"
+}
+
+###
+# 返却値
+@AuthToken = {{login.response.body.token}}
+
+# 情報取得
+GET https://localhost:8377/auth/me HTTP/1.1
+Content-Type: application/json
+Authorization: {{AuthToken}}
+
+###
+# 返却値
+@AuthToken = {{login.response.body.token}}
+
+# 情報取得
+POST https://localhost:8377/auth/logout HTTP/1.1
+Content-Type: application/json
+Authorization: {{AuthToken}}

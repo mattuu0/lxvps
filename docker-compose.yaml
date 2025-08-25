@@ -1,0 +1,90 @@
+services:
+    # リバースプロキシけんWeサーバ
+    nginx:
+        hostname: nginx
+        image: nginx:latest
+        ports:
+            - 8377:8443
+        restart: always
+        tty: true
+        volumes:
+            - ./nginx/configs:/etc/nginx/conf.d/
+            - ./nginx/keys:/etc/nginx/keys
+            - ./nginx/statics:/etc/nginx/static/statics
+    
+    # 認証用コンテナ
+    auth:
+        hostname: auth
+        # image: mattuu0/authbase-auth:0.2.4
+        build:
+            context: ./auth
+            dockerfile: dockerfile
+            target: Develop
+        tty: true
+        env_file:
+            - ./openssl/jwtKeys/private.env
+            - ./config/auth.env
+        volumes:
+            - ./auth/src:/root/src
+            - ./auth/icons:/assets/icons
+        restart: always
+        depends_on:
+            # マイグレーションが終わるまで
+            migrate:
+                condition: service_completed_successfully
+    
+    # マイグレーション
+    migrate:
+        # image: mattuu0/authbase-auth:0.2.4
+        build:
+            context: ./auth
+            dockerfile: dockerfile
+        env_file:
+            - ./config/auth.env
+        command: ["/auth","migrate","-r"]
+
+    # アプリコンテナ
+    app:
+        hostname: app
+        build:
+            context: ./app
+            dockerfile: Dockerfile
+            target: Develop
+        tty: true
+        env_file:
+            - ./openssl/jwtKeys/public.env
+            - ./config/app.env
+        volumes:
+            - ./app/src:/root/src
+        restart: always
+        depends_on:
+            mysql:
+                condition: service_healthy
+            auth:
+
+                condition: service_started
+    # データベース
+    mysql:
+        hostname: db
+        image: mysql
+        restart: always
+        environment:
+            MYSQL_ROOT_PASSWORD: root
+            TZ: Asia/Tokyo
+        volumes:
+            - dbdata:/var/lib/mysql
+            - ./database/my.cnf:/etc/mysql/conf.d/my.cnf
+            - ./database/script/init.sql:/docker-entrypoint-initdb.d/init.sql 
+        healthcheck:
+            test: ["CMD", "mysqladmin", "ping", "-h", "db", "-u", "root", "-proot"]
+            interval: 5s
+            timeout: 10s
+            retries: 5
+    redis:
+        hostname: redis
+        image: redis:latest
+        restart: always
+        ports:
+            - 16380:6379
+volumes:
+    dbdata:
