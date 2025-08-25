@@ -1,4 +1,4 @@
-FROM golang:1.24.1-bullseye as Develop
+FROM golang:1.24.6-bullseye as Develop
 
 # 各種ツールインストール
 RUN apt update & apt install -y curl wget git 
@@ -12,7 +12,7 @@ RUN go install github.com/air-verse/air@latest
 CMD ["air", "-c", ".air.toml"]
 
 # Build 
-FROM golang:1.24.1-bullseye as build
+FROM golang:1.24.6-bullseye as build
 
 # 各種ツールインストール
 RUN apt update & apt install -y curl wget git

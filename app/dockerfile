@@ -1,5 +1,5 @@
 # デバッグ用
-FROM golang:1.24.1-bullseye as Develop
+FROM golang:1.24.6-bullseye as Develop
 
 # apt 更新
 RUN apt update
@@ -14,7 +14,7 @@ RUN go install github.com/air-verse/air@latest
 CMD ["air", "-c", ".air.toml"]
 
 # リリース用
-FROM golang:1.24.1-bullseye as Release
+FROM golang:1.24.6-bullseye as Release
 
 # 作業ディレクトリを設定
 WORKDIR /root/app
