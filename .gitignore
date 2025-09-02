@@ -16,3 +16,5 @@ auth/src/tmp/
 app/src/tmp/
 location/src/tmp/
 auth/icons/
+app/src/keys/*
+!app/src/keys/readme.md
