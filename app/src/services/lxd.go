@@ -95,6 +95,6 @@ func TestLxd() {
 	if err != nil {
 		logger.Println("インスタンスを開始できません")
 		logger.Println(err)
-		return
+		// return
 	}
 }

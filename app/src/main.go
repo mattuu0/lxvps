@@ -2,6 +2,7 @@ package main
 
 import (
 	"app/controllers"
+	"app/lxdctl"
 	"app/middlewares"
 	"app/models"
 	"app/services"
@@ -21,6 +22,9 @@ func main() {
 	// サービス初期化
 	services.Init()
 
+	// lxd 初期化
+	lxdctl.Init()
+
 	// コントローラー初期化
 	controllers.Init()
 
@@ -36,6 +40,8 @@ func main() {
 			"result": "hello world",
 		})
 	}, middlewares.RequireAuth)
+
+	router.GET("/ws",controllers.ConnectShellWs)
 
 	router.Logger.Fatal(router.Start(":8090"))
 }
