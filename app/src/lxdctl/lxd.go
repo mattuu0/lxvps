@@ -10,7 +10,7 @@ import (
 )
 
 var (
-	lxdClient lxd.InstanceServer	// LXDクライアント
+	lxdClient lxd.InstanceServer // LXDクライアント
 )
 
 func Init() {
@@ -51,7 +51,7 @@ func Init() {
 }
 
 // シェルを作成する
-func InitLxd(InstanceId string, WsConn *websocket.Conn) (error) {
+func InitLxd(InstanceId string, WsConn *websocket.Conn) error {
 	// 管理用のクラスをインスタンス化する
 	ctrlShell := LXShell{
 		InstanceId: InstanceId,
@@ -66,7 +66,7 @@ func InitLxd(InstanceId string, WsConn *websocket.Conn) (error) {
 		WaitForWS:   true,
 		Interactive: true,
 		Width:       80,
-		Height:      15,
+		Height:      30,
 	}
 
 	// シェルを実行する
@@ -79,20 +79,6 @@ func InitLxd(InstanceId string, WsConn *websocket.Conn) (error) {
 		Stderr: &ctrlShell,
 	}
 
-	// Setup the terminal (set to raw mode)
-	// if req.Interactive {
-	// 	cfd := int(syscall.Stdin)
-
-	// 	// Set the terminal to raw mode
-	// 	oldttystate, err := termios.MakeRaw(cfd)
-	// 	if err != nil {
-	// 		logger.Println(err)
-	// 		return err
-	// 	}
-
-	// 	defer termios.Restore(cfd, oldttystate)
-	// }
-
 	// Get the current state
 	logger.Println("インスタンス内で実行します")
 
@@ -102,6 +88,29 @@ func InitLxd(InstanceId string, WsConn *websocket.Conn) (error) {
 		logger.Println(err)
 		return err
 	}
+
+	// オペレーションのメタデータを取得
+	opAPI := op.Get()
+
+	// WebSocketのsecretを取得
+	var secret string
+	if fds, ok := opAPI.Metadata["fds"].(map[string]interface{}); ok {
+		if secretVal, exists := fds["control"]; exists {
+			secret = secretVal.(string)
+		}
+	}
+
+	// インスタンス側の websocket 取得
+	instanceSocket, err := op.GetWebsocket(secret)
+
+	// エラー処理
+	if err != nil {
+		logger.Println(err)
+		return err
+	}
+
+	// インスタンス側の websocket を設定
+	ctrlShell.InstanceSocket = instanceSocket
 
 	// プロセスが終わるまで待機
 	err = op.Wait()

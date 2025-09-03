@@ -6,49 +6,27 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>lxvps-shell</title>
 
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/xterm@5.3.0/css/xterm.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/xterm@5.3.0/lib/xterm.min.js"></script>
+    <!-- xterm 本体 -->
+    <link rel="stylesheet" href="./styles/xterm.min.css">
+    <script src="./scripts/xterm.min.js"></script>
+
+    <!-- クリップボードプラグイン -->
+    <script src="./scripts/addon-clipboard.min.js"></script>
+
+    <!-- 画面サイズ合わせるプラグイン -->
+    <script src="./scripts/xterm-addon-fit.min.js"></script>
 </head>
 
 <body>
     <h1>lxvps-shell</h1>
 
-    <div id="terminal"></div>
-    <script>
-        const decoder = new TextDecoder();
+    <div id="terminal" class="terminal"></div>
 
-        // websocket に接続
-        var ws = new WebSocket('/app/ws');
-        ws.onmessage = function (event) {
-            console.log(event.data);
-            try {
-                term.write(decoder.decode(event.data));
-            } catch (ex) {
-                console.log(ex);
-            }
-        };
+    <!-- スタイルシート読み込み -->
+    <link rel="stylesheet" href="./styles/main.css">
 
-        // websocket を arraybuffer に変換
-        ws.binaryType = 'arraybuffer';
-
-        var term = new Terminal();
-        term.open(document.getElementById('terminal'));
-
-        term.onKey(function (evt) {
-            console.log(evt);
-
-            const ev = evt.domEvent
-            const printable = !ev.altKey && !ev.ctrlKey && !ev.metaKey
-            if (ev.keyCode === 8) {
-                if (term._core.buffer.x > 2) {
-                    term.write('\b \b');
-                }
-            } else if (printable) {
-                ws.send(evt.key);
-                // term.write(evt.key);
-            }
-        });
-    </script>
+    <!-- スクリプト読み込み -->
+    <script src="./scripts/main.js"></script>
 </body>
 
 </html>
