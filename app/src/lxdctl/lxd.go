@@ -62,11 +62,17 @@ func InitLxd(InstanceId string, WsConn *websocket.Conn) error {
 
 	// Setup the exec request
 	req := api.InstanceExecPost{
-		Command:     []string{"bash"},
+		Command:     []string{"su","-l"},
 		WaitForWS:   true,
 		Interactive: true,
-		Width:       80,
-		Height:      30,
+		User: 0,
+		Group: 0,
+		Environment: map[string]string{
+			"TERM" : "xterm-256color",
+			"HOME" : "/root",
+			"LANG" : "C.UTF-8",
+			"USER" : "root",
+		},
 	}
 
 	// シェルを実行する
@@ -89,28 +95,58 @@ func InitLxd(InstanceId string, WsConn *websocket.Conn) error {
 		return err
 	}
 
-	// オペレーションのメタデータを取得
+	logger.Println("インスタンス管理用のソケットを取得します")
+
 	opAPI := op.Get()
-
-	// WebSocketのsecretを取得
-	var secret string
-	if fds, ok := opAPI.Metadata["fds"].(map[string]interface{}); ok {
-		if secretVal, exists := fds["control"]; exists {
-			secret = secretVal.(string)
-		}
-	}
-
-	// インスタンス側の websocket 取得
-	instanceSocket, err := op.GetWebsocket(secret)
-
-	// エラー処理
-	if err != nil {
-		logger.Println(err)
+	fds, ok := opAPI.Metadata["fds"].(map[string]interface{})
+	if !ok {
+		logger.Println("FDSメタデータを取得できません")
 		return err
 	}
 
-	// インスタンス側の websocket を設定
-	ctrlShell.InstanceSocket = instanceSocket
+	// データ用WebSocket（stdin/stdout）を取得
+	var dataSecret string
+	if secretVal, exists := fds["0"]; exists {
+		dataSecret = secretVal.(string)
+	}
+
+	// 制御用WebSocketを取得
+	var controlSecret string
+	if secretVal, exists := fds["control"]; exists {
+		controlSecret = secretVal.(string)
+	}
+
+	// エラー処理
+	if dataSecret == "" || controlSecret == "" {
+		logger.Println("必要なsecretを取得できません")
+		return err
+	}
+
+	logger.Println("データ用WebSocketを取得します")
+	
+	// データ用WebSocket接続
+	dataSocket, err := op.GetWebsocket(dataSecret)
+	if err != nil {
+		logger.Println("データWebSocket接続エラー:", err)
+		return err
+	}
+
+	// データ用ソケットをセット
+	ctrlShell.DataSocket = dataSocket
+
+	logger.Println("制御用WebSocketを取得します")
+	
+	// 制御用WebSocket接続
+	controlSocket, err := op.GetWebsocket(controlSecret)
+	if err != nil {
+		logger.Println("制御WebSocket接続エラー:", err)
+		return err
+	}
+
+	// 制御用ソケットをセット
+	ctrlShell.ControlSocket = controlSocket
+
+	logger.PrintErr("ソケット取得完了")
 
 	// プロセスが終わるまで待機
 	err = op.Wait()

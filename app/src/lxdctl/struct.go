@@ -7,9 +7,9 @@ import (
 type LXShell struct {
 	InstanceId string //インスタンスのID
 
-	WsConn *websocket.Conn // websocket 接続
-
-	InstanceSocket *websocket.Conn // インスタンス側の websocket
+	WsConn *websocket.Conn // フロントエンド用の websocket
+	DataSocket *websocket.Conn // インスタンス側の stdin stdout用の Socket
+	ControlSocket *websocket.Conn // インスタンス側の Control Websocket
 }
 
 // websocket のデータ構造
